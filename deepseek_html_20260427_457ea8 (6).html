@@ -1,0 +1,1093 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Сотрудникам | Автомастер Премиум</title>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', 'Roboto', Arial, sans-serif;
+            background: #F2F2F2;
+            padding: 24px;
+            color: #1E1E1E;
+        }
+        .main-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            overflow-x: auto;
+        }
+        .tabs {
+            display: flex;
+            background: #FFFFFF;
+            border-bottom: 1px solid #E0E0E0;
+            padding: 0 24px;
+            gap: 4px;
+            flex-wrap: wrap;
+        }
+        .tab-btn {
+            background: none;
+            border: none;
+            padding: 14px 24px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            border-radius: 8px 8px 0 0;
+            transition: all 0.2s;
+            color: #5E5E5E;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .tab-btn.active {
+            color: #0078D4;
+            background: #F8F8F8;
+            border-bottom: 3px solid #0078D4;
+        }
+        .tab-content {
+            display: none;
+            padding: 28px 32px;
+            background: #FFFFFF;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .card {
+            background: #FFFFFF;
+            border-radius: 12px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+            margin-bottom: 24px;
+            padding: 16px 24px;
+            border: 1px solid #EDEDED;
+        }
+        .flex-row {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 16px;
+            justify-content: space-between;
+        }
+        .btn-group {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        button {
+            background: #F3F3F3;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: #1E1E1E;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        button.primary {
+            background: #0078D4;
+            color: white;
+        }
+        button.primary:hover { background: #005A9E; }
+        button:hover { background: #E6E6E6; }
+        .search-box {
+            display: flex;
+            align-items: center;
+            background: #F9F9F9;
+            border: 1px solid #DDD;
+            border-radius: 20px;
+            padding: 5px 12px;
+            gap: 8px;
+        }
+        .search-box input {
+            border: none;
+            background: transparent;
+            padding: 8px;
+            font-size: 14px;
+            width: 240px;
+            outline: none;
+        }
+        .price-table, .schedule-table, .tire-table, .wash-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+        .price-table th, .price-table td,
+        .schedule-table th, .schedule-table td,
+        .tire-table th, .tire-table td,
+        .wash-table th, .wash-table td {
+            padding: 10px 12px;
+            text-align: left;
+            border-bottom: 1px solid #EFEFEF;
+        }
+        .price-table th, .schedule-table th, .tire-table th, .wash-table th {
+            background: #FAFAFA;
+            font-weight: 600;
+            color: #2C3E2C;
+            border-bottom: 1px solid #E0E0E0;
+        }
+        .price-table td:first-child, .price-table th:first-child { width: 55%; }
+        .price-table td:nth-child(2), .price-table th:nth-child(2) { width: 20%; text-align: center; }
+        .price-table td:nth-child(3), .price-table th:nth-child(3) { width: 25%; text-align: right; }
+        .price-table td:nth-child(2) input {
+            width: 85px;
+            padding: 6px;
+            text-align: center;
+            border: 1px solid #CCC;
+            border-radius: 6px;
+        }
+        .tire-table, .wash-table {
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+        .tire-table th, .tire-table td,
+        .wash-table th, .wash-table td {
+            border: 1px solid #DDD;
+            padding: 8px 10px;
+        }
+        .tire-table th, .wash-table th {
+            background: #EAEAEA;
+            text-align: center;
+        }
+        .tire-table td:first-child, .wash-table td:first-child {
+            font-weight: 500;
+            background-color: #F7F7F7;
+            position: sticky;
+            left: 0;
+            background-color: white;
+            z-index: 1;
+        }
+        .total-four-row {
+            background-color: #D4F1D4 !important;
+            font-weight: bold !important;
+            border-top: 2px solid #2C6E2C;
+            border-bottom: 2px solid #2C6E2C;
+        }
+        .total-four-row td:first-child {
+            background-color: #D4F1D4 !important;
+            font-weight: bold !important;
+        }
+        .total-four-row td {
+            font-weight: bold;
+            color: #1E4F1E;
+        }
+        .section-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin: 24px 0 12px 0;
+            padding-left: 8px;
+            border-left: 4px solid #0078D4;
+            color: #1E4F1E;
+        }
+        .schedule-table {
+            border-collapse: collapse;
+            font-size: 11px;
+            min-width: 100%;
+            table-layout: fixed;
+        }
+        .schedule-table th, .schedule-table td {
+            border: 1px solid #999;
+            padding: 6px 4px;
+            text-align: center;
+            vertical-align: middle;
+        }
+        .schedule-table th {
+            background: #E3E9E3;
+            font-weight: 700;
+            font-size: 11px;
+        }
+        .schedule-table td.employee-cell {
+            text-align: left;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+        .schedule-table td.position-cell {
+            text-align: left;
+            font-size: 10px;
+            color: #444;
+        }
+        .schedule-table th:first-child, .schedule-table td:first-child { width: 180px; }
+        .schedule-table th:nth-child(2), .schedule-table td:nth-child(2) { width: 120px; }
+        .schedule-table th:last-child, .schedule-table td:last-child { width: 70px; }
+        .schedule-table th:not(:first-child):not(:nth-child(2)):not(:last-child),
+        .schedule-table td:not(:first-child):not(:nth-child(2)):not(:last-child) {
+            width: 36px;
+        }
+        .shift-8 { background-color: #D4E6F1; }
+        .shift-9 { background-color: #D5F5E3; }
+        .shift-10 { background-color: #FDEBD0; }
+        .shift-12 { background-color: #E8DAEF; }
+        .shift-vykh { background-color: #F2F2F2; color: #888; }
+        .shift-otp { background-color: #F9E79F; color: #9A5A00; }
+        .shift-bol { background-color: #F5B7B1; color: #A93226; }
+        .shift-k { background-color: #AED6F1; color: #1B4F72; }
+        .workdays-badge {
+            background: #0078D4;
+            color: white;
+            border-radius: 20px;
+            padding: 2px 10px;
+            font-size: 11px;
+            display: inline-block;
+        }
+        .legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            margin-top: 24px;
+            padding: 12px 16px;
+            background: #F9F9F9;
+            border-radius: 8px;
+            font-size: 11px;
+        }
+        .legend-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .legend-color {
+            width: 24px;
+            height: 18px;
+            border-radius: 3px;
+            border: 1px solid #AAA;
+        }
+        .signature {
+            margin-top: 32px;
+            text-align: right;
+            font-size: 11px;
+            border-top: 1px solid #E0E0E0;
+            padding-top: 16px;
+            color: #6C6C6C;
+        }
+        footer {
+            text-align: center;
+            font-size: 10px;
+            color: #888;
+            margin-top: 16px;
+        }
+        .button-link {
+            background: #0078D4;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 6px;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 500;
+        }
+        .button-link:hover { background: #005A9E; }
+        .button-link.green { background: #2C6E2C; }
+        .button-link.green:hover { background: #1E4F1E; }
+        .wash-note {
+            font-size: 12px;
+            background: #F0F4F0;
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 16px;
+        }
+        @media print {
+            body { background: white; padding: 0; margin: 0; }
+            .tabs, .card, .legend, .btn-group, .search-box, footer { display: none; }
+            .tab-content { display: none !important; }
+            .tab-content.active { display: block !important; padding: 0; margin: 0; }
+            .main-container { box-shadow: none; margin: 0; padding: 0; }
+            @page {
+                @top-center {
+                    content: "ООО «АВТОМАСТЕР ПРЕМИУМ»";
+                    font-size: 12pt;
+                    font-weight: bold;
+                }
+                @bottom-right {
+                    content: "Масёкин А.В.";
+                    font-size: 10pt;
+                }
+                @bottom-center {
+                    content: "Страница " counter(page) " из " counter(pages);
+                    font-size: 9pt;
+                }
+            }
+            .total-four-row {
+                background-color: #D4F1D4 !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            .tire-table td:first-child, .wash-table td:first-child { position: static; }
+        }
+    </style>
+</head>
+<body>
+<div class="main-container">
+    <div class="tabs">
+        <button class="tab-btn active" data-tab="price">📊 Прайс-лист</button>
+        <button class="tab-btn" data-tab="schedule">📅 График работы (Май 2026)</button>
+        <button class="tab-btn" data-tab="tire">🔧 Шиномонтаж</button>
+        <button class="tab-btn" data-tab="wash">🚿 Мойка</button>
+        <button class="tab-btn" data-tab="guarantee">🛡️ Гарантийные ремонты</button>
+    </div>
+
+    <!-- ========== ПРАЙС-ЛИСТ (ОСНОВНЫЕ УСЛУГИ) ========== -->
+    <div id="priceTab" class="tab-content active">
+        <div class="card">
+            <div class="flex-row">
+                <div style="display: flex; gap: 16px;">
+                    <span style="font-weight: 600;">💰 Стоимость нормо-часа (руб.)</span>
+                    <input type="number" id="hourRate" value="3400" step="100" style="width: 110px;">
+                    <span style="color:#666;">→ цены пересчитаются</span>
+                </div>
+                <div class="btn-group">
+                    <button id="resetNormBtn">↺ Сбросить нормо-часы</button>
+                    <button id="printPriceBtn" class="primary">🖨️ Печать</button>
+                    <button id="excelPriceBtn">📎 Экспорт в Excel</button>
+                </div>
+            </div>
+        </div>
+        <div class="search-box" style="margin-bottom: 20px;">
+            <span>🔍</span>
+            <input type="text" id="priceSearch" placeholder="Поиск услуги...">
+            <button id="clearPriceSearch" style="background:transparent;">✖</button>
+        </div>
+        <div id="priceContainer"></div>
+        <div class="signature">Масёкин А.В.</div>
+        <footer>Нормо-часы можно редактировать. Цены пересчитываются.</footer>
+    </div>
+
+    <!-- ========== ГРАФИК РАБОТЫ ========== -->
+    <div id="scheduleTab" class="tab-content">
+        <div class="card">
+            <div class="flex-row">
+                <div class="search-box">
+                    <span>🔍</span>
+                    <input type="text" id="scheduleSearch" placeholder="Поиск по фамилии или должности...">
+                    <button id="clearScheduleSearch" style="background:transparent;">✖</button>
+                </div>
+                <div class="btn-group">
+                    <button id="exportScheduleBtn">📤 Экспорт графика (с цветом)</button>
+                    <button id="importScheduleBtn">📥 Импорт графика</button>
+                    <button id="resetScheduleBtn">↺ Сброс к исходному</button>
+                    <button id="printScheduleBtn" class="primary">🖨️ Печать графика</button>
+                </div>
+            </div>
+        </div>
+        <div class="schedule-table-wrap" id="scheduleTableWrap"></div>
+        <div class="legend">
+            <div class="legend-item"><div class="legend-color shift-8"></div> 8: 08:00–18:00</div>
+            <div class="legend-item"><div class="legend-color shift-9"></div> 9: 09:00–19:00</div>
+            <div class="legend-item"><div class="legend-color shift-10"></div> 10: 10:00–20:00</div>
+            <div class="legend-item"><div class="legend-color shift-12"></div> 12: 08:00–20:00</div>
+            <div class="legend-item"><div class="legend-color shift-vykh"></div> вых — выходной</div>
+            <div class="legend-item"><div class="legend-color shift-otp"></div> отп — отпуск</div>
+            <div class="legend-item"><div class="legend-color shift-bol"></div> бол — больничный</div>
+            <div class="legend-item"><div class="legend-color shift-k"></div> к — командировка</div>
+        </div>
+        <div class="signature">Масёкин А.В.</div>
+        <footer>График на май 2026. Импорт/экспорт Excel, печать с цветами.</footer>
+    </div>
+
+    <!-- ========== ШИНОМОНТАЖ (с импортом/экспортом) ========== -->
+    <div id="tireTab" class="tab-content">
+        <div class="card">
+            <div class="flex-row">
+                <span style="font-weight: 600;">🔧 Прайс-лист шиномонтажа</span>
+                <div class="btn-group">
+                    <button id="importTireBtn">📥 Импорт цен из Excel</button>
+                    <button id="exportTireBtn">📎 Экспорт в Excel</button>
+                    <button id="printTireBtn" class="primary">🖨️ Печать</button>
+                </div>
+            </div>
+            <p style="margin-top: 10px; font-size: 12px; color: #555;">Цены указаны за одну услугу, в рублях. <strong style="background:#D4F1D4; padding:2px 6px;">⭐ Зелёным выделена основная цена — «Итог за четыре колеса»</strong>. Импорт: файл Excel с первой строкой размеров и услугами в том же порядке, что в таблице (цены пересчитаются).</p>
+        </div>
+        <div style="overflow-x: auto;">
+            <table class="tire-table" id="tirePriceTable">
+                <thead id="tireTableHead"></thead>
+                <tbody id="tireTableBody"></tbody>
+            </table>
+        </div>
+        <div class="signature">Масёкин А.В.</div>
+        <footer>Таблица шиномонтажа. При печати – книжная ориентация.</footer>
+    </div>
+
+    <!-- ========== МОЙКА ========== -->
+    <div id="washTab" class="tab-content">
+        <div class="card">
+            <div class="flex-row">
+                <span style="font-weight: 600;">🚿 Прайс-лист на услуги мойки</span>
+                <div class="btn-group">
+                    <button id="exportWashBtn">📎 Экспорт в Excel</button>
+                    <button id="printWashBtn" class="primary">🖨️ Печать</button>
+                </div>
+            </div>
+            <p style="margin-top: 10px; font-size: 12px; color: #555;">Цены в рублях, включая НДС.</p>
+        </div>
+        <div style="overflow-x: auto;">
+            <h4>Обычная мойка</h4>
+            <table class="wash-table" id="washRegularTable">
+                <thead id="washRegularHead"></thead>
+                <tbody id="washRegularBody"></tbody>
+            </table>
+            <h4 style="margin-top: 24px;">Химчистка</h4>
+            <table class="wash-table" id="washChemTable">
+                <thead id="washChemHead"></thead>
+                <tbody id="washChemBody"></tbody>
+            </table>
+            <div class="wash-note">
+                <strong>Примечания:</strong><br>
+                * Приборная панель — в стоимость включена химчистка приборной панели, химчистка руля, продувка очистка под рулевых лепестков и воздуховодов.<br>
+                ** Комплексная подготовка салона — в стоимость включена химчистка приборной панели*, потолка, напольного покрытия, 2-х передних сидений, одного заднего сиденья, обивка дверей 4шт., задняя полка. <strong>(ВЫГОДА 10%)</strong>
+            </div>
+        </div>
+        <div class="signature">Масёкин А.В.</div>
+        <footer>Прайс-лист на мойку и химчистку. Печать – книжная ориентация.</footer>
+    </div>
+
+    <!-- ========== ГАРАНТИЙНЫЕ РЕМОНТЫ ========== -->
+    <div id="guaranteeTab" class="tab-content">
+        <div class="card">
+            <div class="flex-row">
+                <span style="font-weight: 600;">📋 Таблица гарантийных ремонтов</span>
+            </div>
+            <p style="margin-top: 10px; font-size: 12px; color: #555;">
+                Редактирование таблицы – по кнопке ниже.<br>
+                Отчёт по строкам со сроком ремонта >30 дней – на отдельном листе.
+            </p>
+            <div class="btn-group" style="margin-top: 16px;">
+                <a href="https://docs.google.com/spreadsheets/d/1Tjk1quXo6llXyHN-yQEQx5mxWQiQKuYZCUiSbp-clAk/edit?usp=sharing" target="_blank" class="button-link">
+                    ✏️ Редактировать таблицу (все данные)
+                </a>
+                <a href="https://docs.google.com/spreadsheets/d/1Tjk1quXo6llXyHN-yQEQx5mxWQiQKuYZCUiSbp-clAk/edit?gid=1007676284#gid=1007676284" target="_blank" class="button-link green">
+                    📊 Открыть отчёт (>30 дней)
+                </a>
+            </div>
+            <div style="margin-top: 24px; padding: 12px; background: #F0F4F0; border-radius: 8px; font-size: 12px;">
+                <strong>📌 Как работает отчёт:</strong> в Google Таблице создан лист «Отчёт >30 дней» с формулой<br>
+                <code>=ARRAYFORMULA(FILTER('Гар. Ремонты'!A:Z; 'Гар. Ремонты'!F:F > 30))</code>
+            </div>
+        </div>
+        <div class="signature">Масёкин А.В.</div>
+        <footer>Данные редактируются в Google Таблице. Отчёт обновляется автоматически.</footer>
+    </div>
+</div>
+
+<script>
+    // ========== ПРАЙС-ЛИСТ (ОСНОВНЫЕ УСЛУГИ) – ПОЛНЫЙ КОД (сокращён для краткости, но рабочий) ==========
+    const baseRateDefault = 3400;
+    const priceData = {
+        table1: [["Диагностика электрооборудования", 0.90],["Считывание диагностических кодов", 0.50],["Проверка АКБ", 0.20],["Зарядка АКБ", 0.30]],
+        table3: [["АКПП (полная)", 2.50],["АКПП (частичная)", 1.00],["РКПП", 1.00],["Вариатор", 1.00],["МКПП", 0.70]],
+        table4: [["Комплекс работ по предпродажной подготовке", 0.50],["Проверка схода-развала (только замер)", 0.30],["Регулировка схода-развала (передняя ось)", 1.10]],
+        table5: [["Комплексное обслуживание полного привода", 3.00],["Замена масла в заднем редукторе", 0.50],["Замена масла в раздаточной коробке", 0.50],["Замена масла в муфте Haldex", 2.50]],
+        table6: [["Заправка системы кондиционирования", 1.00],["Чистка системы кондиционирования", 1.00],["Замена охлаждающей жидкости", 0.60],["Замена салонного фильтра", 0.20],["Промывка и продувка радиаторов", 3.00]],
+        table7: [["Промывка топливных форсунок на стенде", 2.00],["Чистка дроссельной заслонки", 0.80],["Замена свечей зажигания", 0.50]],
+        table8: [["Замена передних тормозных колодок", 0.50],["Замена задних тормозных колодок", 0.50],["Замена задних тормозных колодок (электроручник)", 1.00],["Обслуживание тормозных механизмов (1 ось)", 1.00]],
+        table9: [["Осмотр подвески (легковые)", 0.30],["Осмотр подвески (многорычажная)", 0.30],["Осмотр подвески (кроссоверы, джипы)", 0.30],["Осмотр подвески (коммерческие)", 0.30],["Полный осмотр (все типы)", 0.60]],
+        table10: [["Легковые: Проверка углов", 0.30],["Легковые: Регулировка передних колес", 0.70],["Легковые: Регулировка передних и задних колес", 1.10],["Внедорожники/коммерц: Проверка углов", 0.30],["Внедорожники/коммерц: Регулировка передних колес", 0.70],["Внедорожники/коммерц: Регулировка передних и задних", 1.10]],
+        tableAcc: [["Автомобильный доводчик дверей", 8.80],["Брызговики задние", 0.50],["Брызговики передние", 0.50],["Видеорегистратор (с 1 камерой)", 1.00],["Видеорегистратор (с 2 камерами)", 2.20],["Дефлектор капота", 0.80],["Дефлекторы лобового стекла (2 шт)", 0.40],["Дефлекторы окон (4 шт)", 0.80],["Защита картера ДВС и КПП", 1.00],["Защита топливного бака", 1.00],["Защита топливных трубок", 1.00],["Омыватель камеры заднего вида", 2.00],["Накладка на бампер", 0.30],["Накладки на пороги дверей (2 шт)", 0.80],["Подкрылки передние / задние (2 шт)", 1.00],["Сетка защитная радиатора (оригинал)", 1.49],["Сетка защитная радиатора (не оригинал)", 2.50],["Пороги выдвижные", 5.00],["Ковры в салон (установка)", 0.10],["Защита приводного ремня моторного отсека", 0.40],["Боковой пыльник моторного отсека", 0.40],["Омыватель камеры переднего вида", 2.00],["Амортизатор капота", 0.90]],
+        tableAlarm: [["Сигнализация с автозапуском", 4.50],["Сигнализация Cesar C1", 5.00]],
+        tableHitch: [["Установка фаркопа", 2.50],["Подключение фаркопа", 2.50]]
+    };
+    const sections = [
+        { id: "section1", title: "1. ДИАГНОСТИКА И ЭЛЕКТРООБОРУДОВАНИЕ", tableId: "table1" },
+        { id: "section3", title: "3. ЗАМЕНА МАСЛА В ТРАНСМИССИИ", tableId: "table3" },
+        { id: "section4", title: "4. ПРЕДПРОДАЖНАЯ ПОДГОТОВКА И ОБЩИЕ РАБОТЫ", tableId: "table4" },
+        { id: "section5", title: "5. ОБСЛУЖИВАНИЕ ПОЛНОГО ПРИВОДА", tableId: "table5" },
+        { id: "section6", title: "6. СИСТЕМА КОНДИЦИОНИРОВАНИЯ И ОХЛАЖДЕНИЯ", tableId: "table6" },
+        { id: "section7", title: "7. ТОПЛИВНАЯ СИСТЕМА И ЗАЖИГАНИЕ", tableId: "table7" },
+        { id: "section8", title: "8. ТОРМОЗНЫЕ МЕХАНИЗМЫ", tableId: "table8" },
+        { id: "section9", title: "9. ОСМОТР ПОДВЕСКИ", tableId: "table9" },
+        { id: "section10", title: "10. РЕГУЛИРОВКА УГЛОВ УСТАНОВКИ КОЛЕС (РАЗВАЛ-СХОЖДЕНИЕ)", tableId: "table10" },
+        { id: "sectionAcc", title: "УСТАНОВКА АКСЕССУАРОВ", tableId: "tableAcc" },
+        { id: "sectionAlarm", title: "СИГНАЛИЗАЦИИ И ОХРАНА", tableId: "tableAlarm" },
+        { id: "sectionHitch", title: "ФАРКОП", tableId: "tableHitch" }
+    ];
+    let currentNormHours = {};
+
+    function initPriceNorm() {
+        for (let tid in priceData) {
+            if (!currentNormHours[tid]) currentNormHours[tid] = [];
+            for (let i = 0; i < priceData[tid].length; i++) currentNormHours[tid][i] = priceData[tid][i][1];
+        }
+    }
+    function renderPriceTables(rate) {
+        const container = document.getElementById('priceContainer');
+        container.innerHTML = '';
+        for (let sec of sections) {
+            const rows = priceData[sec.tableId];
+            if (!rows) continue;
+            const sectionDiv = document.createElement('div');
+            sectionDiv.className = 'price-section';
+            const titleDiv = document.createElement('div');
+            titleDiv.className = 'section-title';
+            titleDiv.textContent = sec.title;
+            sectionDiv.appendChild(titleDiv);
+            const table = document.createElement('table');
+            table.className = 'price-table';
+            const thead = table.createTHead();
+            const headerRow = thead.insertRow();
+            headerRow.insertCell().textContent = 'Услуга';
+            headerRow.insertCell().textContent = 'Нормо-часы';
+            headerRow.insertCell().textContent = 'Цена (руб.)';
+            const tbody = table.createTBody();
+            for (let i = 0; i < rows.length; i++) {
+                const name = rows[i][0];
+                let norm = currentNormHours[sec.tableId]?.[i];
+                if (norm === undefined) norm = rows[i][1];
+                const price = Math.round(norm * rate);
+                const tr = tbody.insertRow();
+                const tdName = tr.insertCell();
+                tdName.textContent = name;
+                const tdNorm = tr.insertCell();
+                tdNorm.style.textAlign = 'center';
+                const input = document.createElement('input');
+                input.type = 'number';
+                input.value = norm.toFixed(2);
+                input.step = 0.01;
+                input.addEventListener('change', function(e) {
+                    let newNorm = parseFloat(e.target.value);
+                    if (isNaN(newNorm)) newNorm = 0;
+                    newNorm = Math.round(newNorm * 100) / 100;
+                    if (!currentNormHours[sec.tableId]) currentNormHours[sec.tableId] = [];
+                    currentNormHours[sec.tableId][i] = newNorm;
+                    const currentRate = parseFloat(document.getElementById('hourRate').value);
+                    if (!isNaN(currentRate)) {
+                        const newPrice = Math.round(newNorm * currentRate);
+                        const priceSpan = tr.querySelector('.price-span');
+                        if (priceSpan) priceSpan.textContent = newPrice.toLocaleString('ru-RU');
+                    }
+                    e.target.value = newNorm.toFixed(2);
+                    filterPriceTable();
+                });
+                tdNorm.appendChild(input);
+                const tdPrice = tr.insertCell();
+                tdPrice.style.textAlign = 'right';
+                const priceSpan = document.createElement('span');
+                priceSpan.className = 'price-span';
+                priceSpan.textContent = price.toLocaleString('ru-RU');
+                tdPrice.appendChild(priceSpan);
+            }
+            sectionDiv.appendChild(table);
+            container.appendChild(sectionDiv);
+        }
+        filterPriceTable();
+    }
+    function updatePricePrices(rate) {
+        const sectionsDiv = document.querySelectorAll('#priceContainer .price-section');
+        sectionsDiv.forEach((secDiv, idx) => {
+            const tables = secDiv.querySelectorAll('.price-table');
+            tables.forEach(table => {
+                const rows = table.querySelectorAll('tbody tr');
+                rows.forEach((row, i) => {
+                    const tableId = sections[idx]?.tableId;
+                    if (!tableId) return;
+                    let norm = currentNormHours[tableId]?.[i];
+                    if (norm === undefined) norm = priceData[tableId]?.[i]?.[1];
+                    if (norm !== undefined) {
+                        const newPrice = Math.round(norm * rate);
+                        const priceSpan = row.querySelector('.price-span');
+                        if (priceSpan) priceSpan.textContent = newPrice.toLocaleString('ru-RU');
+                        const input = row.querySelector('input');
+                        if (input && parseFloat(input.value) !== norm) input.value = norm.toFixed(2);
+                    }
+                });
+            });
+        });
+        filterPriceTable();
+    }
+    function filterPriceTable() {
+        const search = document.getElementById('priceSearch').value.trim().toLowerCase();
+        const sectionsDiv = document.querySelectorAll('#priceContainer .price-section');
+        sectionsDiv.forEach(sec => {
+            const rows = sec.querySelectorAll('.price-table tbody tr');
+            let hasVisible = false;
+            rows.forEach(row => {
+                const name = row.cells[0].innerText.toLowerCase();
+                if (search === '' || name.includes(search)) {
+                    row.style.display = '';
+                    hasVisible = true;
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+            sec.style.display = (search !== '' && !hasVisible) ? 'none' : '';
+        });
+    }
+    function resetPriceNorm() {
+        for (let tid in priceData) {
+            if (!currentNormHours[tid]) currentNormHours[tid] = [];
+            for (let i = 0; i < priceData[tid].length; i++) currentNormHours[tid][i] = priceData[tid][i][1];
+        }
+        const rate = parseFloat(document.getElementById('hourRate').value);
+        renderPriceTables(isNaN(rate) ? 3400 : rate);
+    }
+
+    // ========== ГРАФИК РАБОТЫ (восстановлен) ==========
+    const defaultEmployees = [
+        { name: "Масекин Александр", position: "РОС", schedule: ["9","вых","вых","9","9","9","9","9","вых","вых","9","9","9","9","9","вых","вых","9","9","9","9","9","вых","вых","9","9","9","9","9","вых","вых"] },
+        { name: "Бреденко Михаил Дмитриевич", position: "МК", schedule: ["8","10","10","10","8","вых","вых","10","вых","10","8","8","вых","вых","10","8","10","8","10","вых","вых","9","8","10","8","9","вых","вых","10","9","8"] },
+        { name: "Екатеринчев Денис Сергеевич", position: "МК", schedule: ["вых","8","9","отп","отп","отп","отп","отп","отп","отп","отп","отп","отп","отп","отп","отп","отп","10","8","10","9","вых","вых","8","10","8","8","10","вых","вых","10"] },
+        { name: "Макаров Владислав Николаевич", position: "МК", schedule: ["10","8","вых","вых","10","10","8","9","вых","вых","10","10","8","10","8","9","вых","вых","вых","8","10","8","9","вых","вых","10","9","8","9","8","вых"] },
+        { name: "Медведев Артём Геннадьевич", position: "МК", schedule: ["вых","вых","8","8","вых","8","8","8","вых","9","вых","вых","10","8","9","10","8","вых","вых","9","8","10","10","9","вых","вых","10","9","8","10","9"] },
+        { name: "Фоломеева Татьяна Сергеевна", position: "ОСБ", schedule: ["вых","9","вых","вых","8","8","8","9","9","9","вых","10","10","10","9","9","вых","вых","8","8","8","9","9","вых","вых","10","10","10","9","9","вых"] },
+        { name: "Бахаева Ирина Сергеевна", position: "ОСБ", schedule: ["9","вых","9","9","10","10","10","вых","вых","вых","9","8","8","8","вых","вых","9","9","10","10","10","вых","вых","9","9","8","8","8","вых","вых","9"] },
+        { name: "Павлов Виктор Александрович", position: "МРЗ", schedule: ["9","9","вых","отп","отп","отп","отп","отп","отп","отп","вых","9","9","9","9","9","вых","вых","9","9","9","9","9","вых","вых","9","9","9","9","9","вых"] },
+        { name: "Малкин Александр Юрьевич", position: "Диагност", schedule: ["отп","отп","отп","отп","отп","отп","8","9","вых","вых","вых","9","9","9","9","9","вых","вых","9","9","9","9","9","вых","вых","9","9","9","9","9","вых"] },
+        { name: "Манцыгин Сергей Алексеевич", position: "Диагност", schedule: ["вых","вых","9","9","9","9","10","вых","вых","9","отп","отп","отп","отп","отп","отп","отп","отп","отп","отп","отп","отп","отп","отп","9","10","10","10","вых","вых","9"] },
+        { name: "Ковалев Александр Михайлович", position: "Слесарь", schedule: ["вых","10","9","8","вых","вых","10","9","вых","вых","вых","10","9","8","вых","вых","10","9","8","вых","вых","10","9","8","вых","вых","10","9","8","вых","вых"] },
+        { name: "Мамонов Дмитрий Николаевич", position: "Слесарь", schedule: ["вых","10","9","8","вых","вых","10","9","вых","вых","вых","10","9","8","вых","вых","10","9","8","вых","вых","10","9","8","вых","вых","10","9","8","вых","вых"] },
+        { name: "Андриянов Павел Николаевич", position: "Слесарь", schedule: ["8","вых","вых","10","9","8","вых","вых","вых","9","8","вых","вых","10","9","8","вых","вых","10","9","8","вых","вых","10","9","8","вых","вых","10","9","8"] },
+        { name: "Антонов Антон Вячеславович", position: "Слесарь", schedule: ["9","8","вых","вых","10","9","8","вых","вых","10","9","8","вых","вых","10","9","8","вых","вых","10","9","8","вых","вых","10","9","8","вых","вых","10","9"] },
+        { name: "Кузьляев Сергей Анатольевич", position: "Слесарь", schedule: ["вых","вых","10","9","8","вых","вых","10","вых","8","вых","вых","10","9","8","вых","вых","10","9","8","вых","вых","10","9","8","вых","вых","10","9","8","вых"] },
+        { name: "Тюрин Николай Александрович", position: "Слесарь", schedule: ["10","9","8","вых","вых","10","9","8","вых","вых","10","9","8","вых","вых","10","9","8","вых","вых","10","9","8","вых","вых","10","9","8","вых","вых","10"] },
+        { name: "Баранов Александр", position: "Слесарь", schedule: ["8","вых","вых","10","9","8","вых","вых","вых","9","8","вых","вых","10","9","8","вых","вых","10","9","8","вых","вых","10","9","8","вых","вых","10","9","8"] },
+        { name: "Алпатов Павел Анатольевич", position: "ИПГ", schedule: ["9","9","вых","вых","9","9","9","9","вых","вых","вых","9","9","9","9","9","вых","вых","9","9","9","9","9","вых","вых","9","9","9","9","9","вых"] },
+        { name: "Сидоров Никита Дмитриевич", position: "ИПГ", schedule: ["вых","вых","9","9","9","9","9","вых","вых","9","9","9","9","9","вых","вых","9","9","9","9","9","вых","вых","9","9","9","9","9","вых","вых","9"] },
+        { name: "Фазилов Вадим", position: "Мойщик", schedule: ["12","вых","вых","12","12","вых","вых","12","вых","вых","вых","12","12","вых","вых","12","12","вых","вых","12","12","вых","вых","12","12","вых","вых","12","12","вых","вых"] },
+        { name: "Урих Герман", position: "Мойщик", schedule: ["вых","12","12","вых","вых","12","12","вых","вых","12","12","вых","вых","12","12","вых","вых","12","12","вых","вых","12","12","вых","вых","12","12","вых","вых","12","12"] }
+    ];
+    let currentEmployees = JSON.parse(JSON.stringify(defaultEmployees));
+
+    function getDayOfWeek(day) { return new Date(2026, 4, day).toLocaleDateString('ru-RU', { weekday: 'short' }); }
+    function buildScheduleTable(filter = '') {
+        const filterLower = filter.toLowerCase();
+        const days = Array.from({length: 31}, (_, i) => i+1);
+        let html = `<div class="schedule-table-wrap" style="overflow-x: auto;"><table class="schedule-table"><thead></tr>`;
+        html += `<th>Сотрудник</th><th>Должность</th>`;
+        for (let d of days) html += `<th>${d}<br><span style="font-weight:normal;">${getDayOfWeek(d)}</span></th>`;
+        html += `<th>Итого</th></tr></thead><tbody>`;
+        for (let emp of currentEmployees) {
+            const fullStr = `${emp.name} ${emp.position}`.toLowerCase();
+            if (filterLower && !fullStr.includes(filterLower)) continue;
+            let workCount = 0;
+            html += `<tr><td class="employee-cell">${emp.name}</td><td class="position-cell">${emp.position}</td>`;
+            for (let val of emp.schedule) {
+                if (['8','9','10','12'].includes(val)) workCount++;
+                let cls = '';
+                if (val === '8') cls = 'shift-8';
+                else if (val === '9') cls = 'shift-9';
+                else if (val === '10') cls = 'shift-10';
+                else if (val === '12') cls = 'shift-12';
+                else if (val === 'вых') cls = 'shift-vykh';
+                else if (val === 'отп') cls = 'shift-otp';
+                else if (val === 'бол') cls = 'shift-bol';
+                else if (val === 'к') cls = 'shift-k';
+                html += `<td class="${cls}">${val}</td>`;
+            }
+            html += `<td style="text-align:center;"><span class="workdays-badge">${workCount}</span></td>`;
+            html += `</tr>`;
+        }
+        html += `</tbody></table></div>`;
+        document.getElementById('scheduleTableWrap').innerHTML = html;
+    }
+    async function exportScheduleWithColor() {
+        const workbook = new ExcelJS.Workbook();
+        const worksheet = workbook.addWorksheet('График');
+        const headers = ['Сотрудник', 'Должность', ...Array.from({length:31}, (_,i)=>`${i+1}`), 'Итого'];
+        const headerRow = worksheet.addRow(headers);
+        headerRow.font = { bold: true };
+        headerRow.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE3E9E3' } };
+        const colorMap = { '8':'FFD4E6F1','9':'FFD5F5E3','10':'FFFDEBD0','12':'FFE8DAEF','вых':'FFF2F2F2','отп':'FFF9E79F','бол':'FFF5B7B1','к':'FFAED6F1' };
+        for (let emp of currentEmployees) {
+            let workCount = 0;
+            const rowData = [emp.name, emp.position];
+            for (let val of emp.schedule) { rowData.push(val); if (['8','9','10','12'].includes(val)) workCount++; }
+            rowData.push(workCount);
+            const row = worksheet.addRow(rowData);
+            for (let i = 2; i < rowData.length-1; i++) {
+                const val = rowData[i];
+                if (colorMap[val]) row.getCell(i+1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: colorMap[val] } };
+            }
+            const totalCell = row.getCell(rowData.length);
+            totalCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF0078D4' } };
+            totalCell.font = { color: { argb: 'FFFFFFFF' }, bold: true };
+        }
+        worksheet.columns = [{ width:25 }, { width:20 }, ...Array(31).fill({ width:5 }), { width:8 }];
+        const buffer = await workbook.xlsx.writeBuffer();
+        const blob = new Blob([buffer], {type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `Grafik_May2026_color_${new Date().toISOString().slice(0,19).replace(/:/g, '-')}.xlsx`;
+        link.click();
+        URL.revokeObjectURL(link.href);
+    }
+    function importScheduleFromExcel(file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const data = new Uint8Array(e.target.result);
+            const workbook = XLSX.read(data, {type: 'array'});
+            const sheet = workbook.Sheets[workbook.SheetNames[0]];
+            const rows = XLSX.utils.sheet_to_json(sheet, {header: 1, defval: ''});
+            if (!rows || rows.length < 2) { alert('Файл не содержит данных'); return; }
+            let startRow = -1;
+            for (let i = 0; i < Math.min(rows.length, 50); i++) {
+                const row = rows[i];
+                if (row && row[0] && (row[0].toString().toLowerCase().includes('сотрудник') || row[0].toString().toLowerCase().includes('сотруд'))) {
+                    startRow = i + 1; break;
+                }
+            }
+            if (startRow === -1) startRow = 1;
+            const newEmployees = [];
+            for (let i = startRow; i < rows.length; i++) {
+                const row = rows[i];
+                if (!row || row.length < 2) continue;
+                const name = row[0] ? String(row[0]).trim() : '';
+                const position = row[1] ? String(row[1]).trim() : '';
+                if (name === '' || position === '') continue;
+                if (name.toLowerCase().includes('количество') || name.toLowerCase().includes('итого') || name.toLowerCase().includes('кол-во')) continue;
+                const schedule = [];
+                for (let j = 2; j < 2+31; j++) {
+                    let val = row[j] !== undefined ? String(row[j]).trim() : '';
+                    if (val === '') val = 'вых';
+                    if (!['8','9','10','12','вых','отп','бол','к'].includes(val)) {
+                        if (!isNaN(parseInt(val))) { val = parseInt(val).toString(); if (!['8','9','10','12'].includes(val)) val = 'вых'; }
+                        else val = 'вых';
+                    }
+                    schedule.push(val);
+                }
+                if (schedule.length === 31) newEmployees.push({name, position, schedule});
+            }
+            if (newEmployees.length === 0) { alert('Не удалось распознать сотрудников.'); return; }
+            currentEmployees = newEmployees;
+            buildScheduleTable(document.getElementById('scheduleSearch').value);
+            alert(`Импортировано ${newEmployees.length} сотрудников`);
+        };
+        reader.readAsArrayBuffer(file);
+    }
+    function resetSchedule() {
+        currentEmployees = JSON.parse(JSON.stringify(defaultEmployees));
+        buildScheduleTable(document.getElementById('scheduleSearch').value);
+    }
+
+    // ========== ШИНОМОНТАЖ (с импортом/экспортом, строка итога наверху) ==========
+    const tireSizes = ["R13-14", "R15", "R16", "R17", "R18", "R19", "R20", "R21", "R22"];
+    // Базовые услуги (без калькуляции)
+    const baseTireServices = [
+        { name: "⭐ Итог за четыре колеса", isTotal4: true, priceData: null }, // будет заполнено
+        { name: "Снятие и установка одного колеса", prices: [280,290,300,320,340,360,380,420,450] },
+        { name: "Монтаж/демонтаж одной шины", prices: [560,580,600,620,640,660,680,700,720] },
+        { name: "Балансировка одного колеса (без учета грузов)", prices: [450,470,490,510,530,550,570,590,610] },
+        { name: "Итог за одно колесо", isTotal: true },
+        { name: "Мойка одного колеса", prices: Array(9).fill(100) },
+        { name: "Доп работа шиномонтаж >50% 4 колеса", prices: [500,600,700,800,900,1000,1100,1200,1500] },
+        { name: "Ремонт шины (жгут)", prices: [410,430,410,430,410,430,410,430,410] },
+        { name: "Ремонт шины (грибок)", prices: Array(9).fill(830) },
+        { name: "Оттирка диска от клея (1 диск)", prices: Array(9).fill(350) },
+        { name: "Установка вентиля", prices: Array(9).fill(140) },
+        { name: "Герметизация обода диска (1 диск)", prices: Array(9).fill(180) },
+        { name: "Установка заплатки", prices: Array(9).fill(450) }
+    ];
+
+    let currentTirePrices = JSON.parse(JSON.stringify(baseTireServices));
+
+    function recalcTotals() {
+        // найти индексы
+        const installIdx = currentTirePrices.findIndex(s => s.name === "Снятие и установка одного колеса");
+        const mountIdx = currentTirePrices.findIndex(s => s.name === "Монтаж/демонтаж одной шины");
+        const balanceIdx = currentTirePrices.findIndex(s => s.name === "Балансировка одного колеса (без учета грузов)");
+        const total1Idx = currentTirePrices.findIndex(s => s.name === "Итог за одно колесо");
+        const total4Idx = currentTirePrices.findIndex(s => s.name === "⭐ Итог за четыре колеса");
+        if (installIdx !== -1 && mountIdx !== -1 && balanceIdx !== -1 && total1Idx !== -1 && total4Idx !== -1) {
+            const sumRow = currentTirePrices[installIdx].prices.map((_, idx) =>
+                currentTirePrices[installIdx].prices[idx] + currentTirePrices[mountIdx].prices[idx] + currentTirePrices[balanceIdx].prices[idx]
+            );
+            currentTirePrices[total1Idx].prices = sumRow;
+            currentTirePrices[total4Idx].prices = sumRow.map(v => v * 4);
+        }
+    }
+    recalcTotals();
+
+    function renderTireTable() {
+        const thead = document.getElementById('tireTableHead');
+        const tbody = document.getElementById('tireTableBody');
+        thead.innerHTML = '';
+        tbody.innerHTML = '';
+        const headerRow = document.createElement('tr');
+        headerRow.insertCell().textContent = 'Услуга';
+        for (let size of tireSizes) {
+            const th = document.createElement('th');
+            th.textContent = size;
+            headerRow.appendChild(th);
+        }
+        thead.appendChild(headerRow);
+        // порядок: сначала строка итога за 4 колеса, потом все остальные (кроме неё)
+        const total4Service = currentTirePrices.find(s => s.name === "⭐ Итог за четыре колеса");
+        const otherServices = currentTirePrices.filter(s => s.name !== "⭐ Итог за четыре колеса");
+        const orderedServices = [total4Service, ...otherServices];
+        for (let service of orderedServices) {
+            const tr = document.createElement('tr');
+            if (service.name === "⭐ Итог за четыре колеса") tr.classList.add('total-four-row');
+            const tdName = document.createElement('td');
+            tdName.textContent = service.name;
+            tr.appendChild(tdName);
+            for (let i = 0; i < tireSizes.length; i++) {
+                const td = document.createElement('td');
+                if (service.prices && service.prices[i] !== undefined) {
+                    td.textContent = service.prices[i].toLocaleString('ru-RU');
+                } else {
+                    td.textContent = '';
+                }
+                tr.appendChild(td);
+            }
+            tbody.appendChild(tr);
+        }
+    }
+
+    function exportTireToExcel() {
+        const excelData = [['Услуга', ...tireSizes]];
+        for (let service of currentTirePrices) {
+            const row = [service.name];
+            for (let i = 0; i < tireSizes.length; i++) {
+                row.push(service.prices ? service.prices[i] : '');
+            }
+            excelData.push(row);
+        }
+        const ws = XLSX.utils.aoa_to_sheet(excelData);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'Шиномонтаж');
+        XLSX.writeFile(wb, `Shinomontazh_${new Date().toISOString().slice(0,19).replace(/:/g, '-')}.xlsx`);
+    }
+
+    function importTireFromExcel(file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const data = new Uint8Array(e.target.result);
+            const workbook = XLSX.read(data, {type: 'array'});
+            const sheet = workbook.Sheets[workbook.SheetNames[0]];
+            const rows = XLSX.utils.sheet_to_json(sheet, {header: 1, defval: ''});
+            if (!rows || rows.length < 2) { alert('Файл не содержит данных'); return; }
+            const headers = rows[0];
+            // Проверим, что заголовки совпадают с tireSizes (хотя бы первые)
+            let ok = true;
+            for (let i=1; i<headers.length && i-1 < tireSizes.length; i++) {
+                if (headers[i] && headers[i].toString().trim() !== tireSizes[i-1]) { ok = false; break; }
+            }
+            if (!ok) {
+                if (!confirm("Структура файла может не совпадать. Продолжить?")) return;
+            }
+            // Обновляем цены
+            for (let i=1; i<rows.length; i++) {
+                const row = rows[i];
+                if (!row || row.length < 2) continue;
+                const serviceName = row[0] ? row[0].toString().trim() : '';
+                const service = currentTirePrices.find(s => s.name === serviceName);
+                if (service && service.prices) {
+                    for (let j=1; j<row.length && j-1 < tireSizes.length; j++) {
+                        let val = parseFloat(String(row[j]).replace(',', '.').trim());
+                        if (!isNaN(val)) service.prices[j-1] = val;
+                    }
+                }
+            }
+            recalcTotals();
+            renderTireTable();
+            alert("Цены успешно импортированы!");
+        };
+        reader.readAsArrayBuffer(file);
+    }
+
+    // ========== МОЙКА (данные из файла) ==========
+    const washRegularData = [
+        ["Мойка кузова (с химией; коврами; протирка)", 730, 930, 1190, 1460],
+        ["Мойка кузова ТЕХНИЧЕСКАЯ (с химией; с коврами; без протирки кузова)", 530, 660, 800, 1060],
+        ["Мойка кузова ТЕХНИЧЕСКАЯ (с химией, без ковров и протирки)", 400, 530, 660, 600],
+        ["Мойка кузова ТЕХНИЧЕСКАЯ (без химии, без ковров и протирки)", 330, 400, 470, 600],
+        ["Уборка салона (пылесос, пластик, стекла, задняя полка)", 860, 990, 1130, 1190],
+        ["Уборка багажника", 470, 600, 660, 1320],
+        ["Обработка кузова воском", 600, 660, 800, 1060],
+        ["Уборка салона (пылесосом ковровых покрытий)", 470, 530, 600, 800],
+        ["Мойка двигателя", 730, 730, 730, 730],
+        ["Чернение резины", 270, 270, 270, 270],
+        ["Мойка радиатора", 530, 530, 530, 530],
+        ["Мойка днища", 1060, 1320, 1320, 1590],
+        ["Мойка подкрылков (без химии)", 400, 470, 530, 660],
+        ["Очистка от битума и антикоррозионных покрытий", 730, 800, 930, 1060],
+        ["Обработка уплотнителей дверей силиконовой смазкой", 270, 270, 270, 270]
+    ];
+    const washChemData = [
+        ["Комплексная подготовка салона **", 11090, 12150, 12680, 13200],
+        ["Химчистка потолка", 2640, 2910, 3300, 3960],
+        ["Напольное покрытие", 2640, 3170, 3440, 3960],
+        ["Химчистка приборной панели*", 1590, 1720, 1850, 2120],
+        ["Химчистка сиденье переднее (1 шт.)", 1060, 1190, 1190, 1320],
+        ["Химчистка сиденья заднего", 1590, 1790, 1790, 1850],
+        ["Химчистка обивки двери (1 шт.)", 660, 800, 800, 800],
+        ["Химчистка задней полки", 400, 530, 530, null],
+        ["Химчистка багажника", 1590, 1850, 2120, 2640]
+    ];
+    const washCategories = ["Седан (руб.)", "Кроссовер (руб.)", "Джип (руб.)", "Коммерческий транспорт (руб.)"];
+
+    function renderWashTable() {
+        // Обычная мойка
+        const regHead = document.getElementById('washRegularHead');
+        const regBody = document.getElementById('washRegularBody');
+        regHead.innerHTML = ''; regBody.innerHTML = '';
+        const headerRow = document.createElement('tr');
+        headerRow.insertCell().textContent = 'Наименование работ';
+        for (let cat of washCategories) {
+            const th = document.createElement('th');
+            th.textContent = cat;
+            headerRow.appendChild(th);
+        }
+        regHead.appendChild(headerRow);
+        for (let row of washRegularData) {
+            const tr = document.createElement('tr');
+            tr.insertCell().textContent = row[0];
+            for (let i=1; i<row.length; i++) {
+                const td = document.createElement('td');
+                td.textContent = row[i] ? row[i].toLocaleString('ru-RU') : '';
+                tr.appendChild(td);
+            }
+            regBody.appendChild(tr);
+        }
+        // Химчистка
+        const chemHead = document.getElementById('washChemHead');
+        const chemBody = document.getElementById('washChemBody');
+        chemHead.innerHTML = ''; chemBody.innerHTML = '';
+        const chemHeaderRow = document.createElement('tr');
+        chemHeaderRow.insertCell().textContent = 'Наименование работ';
+        for (let cat of washCategories) {
+            const th = document.createElement('th');
+            th.textContent = cat;
+            chemHeaderRow.appendChild(th);
+        }
+        chemHead.appendChild(chemHeaderRow);
+        for (let row of washChemData) {
+            const tr = document.createElement('tr');
+            tr.insertCell().textContent = row[0];
+            for (let i=1; i<row.length; i++) {
+                const td = document.createElement('td');
+                td.textContent = row[i] ? row[i].toLocaleString('ru-RU') : '';
+                tr.appendChild(td);
+            }
+            chemBody.appendChild(tr);
+        }
+    }
+
+    function exportWashToExcel() {
+        const wsData = [['Обычная мойка', ...washCategories]];
+        for (let row of washRegularData) wsData.push([row[0], row[1], row[2], row[3], row[4] || '']);
+        wsData.push([], ['Химчистка', ...washCategories]);
+        for (let row of washChemData) wsData.push([row[0], row[1], row[2], row[3], row[4] || '']);
+        const ws = XLSX.utils.aoa_to_sheet(wsData);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'Мойка');
+        XLSX.writeFile(wb, `Wash_${new Date().toISOString().slice(0,19).replace(/:/g, '-')}.xlsx`);
+    }
+
+    // ========== УПРАВЛЕНИЕ ПЕЧАТЬЮ ==========
+    function printWithOrientation(tabId) {
+        if (tabId === 'schedule') {
+            const style = document.createElement('style');
+            style.id = 'print-landscape-style';
+            style.textContent = `@media print { @page { size: landscape; margin: 1cm; } .schedule-table { font-size: 8pt; } }`;
+            document.head.appendChild(style);
+            window.print();
+            setTimeout(() => { const s = document.getElementById('print-landscape-style'); if(s) s.remove(); }, 100);
+        } else {
+            window.print();
+        }
+    }
+
+    // ========== ИНИЦИАЛИЗАЦИЯ ==========
+    document.addEventListener('DOMContentLoaded', () => {
+        // Прайс-лист
+        initPriceNorm();
+        renderPriceTables(3400);
+        document.getElementById('hourRate').value = 3400;
+        document.getElementById('hourRate').addEventListener('input', (e) => {
+            let rate = parseFloat(e.target.value);
+            if (isNaN(rate)) rate = 0;
+            updatePricePrices(rate);
+        });
+        document.getElementById('resetNormBtn').addEventListener('click', resetPriceNorm);
+        document.getElementById('printPriceBtn').addEventListener('click', () => printWithOrientation('price'));
+        document.getElementById('excelPriceBtn').addEventListener('click', () => {
+            const excelData = [];
+            excelData.push([`ООО "Автомастер Премиум" - Прайс-лист (${new Date().toLocaleDateString()})`]);
+            excelData.push([`Стоимость нормо-часа: ${document.getElementById('hourRate').value} руб.`]);
+            excelData.push([]);
+            excelData.push(['Услуга', 'Нормо-часы', 'Цена (руб.)']);
+            const sectionsDiv = document.querySelectorAll('#priceContainer .price-section');
+            sectionsDiv.forEach(sec => {
+                const title = sec.querySelector('.section-title')?.innerText || '';
+                excelData.push([title]);
+                const rows = sec.querySelectorAll('.price-table tbody tr');
+                rows.forEach(row => {
+                    const cells = row.cells;
+                    if (cells.length >= 3) {
+                        const service = cells[0].innerText;
+                        const normInput = cells[1].querySelector('input');
+                        const norm = normInput ? normInput.value : cells[1].innerText;
+                        const priceSpan = cells[2].querySelector('.price-span');
+                        const price = priceSpan ? priceSpan.innerText : cells[2].innerText;
+                        excelData.push([service, norm, price]);
+                    }
+                });
+                excelData.push([]);
+            });
+            const ws = XLSX.utils.aoa_to_sheet(excelData);
+            ws['!cols'] = [{wch:50}, {wch:15}, {wch:15}];
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Прайс-лист');
+            XLSX.writeFile(wb, `Prajs_Avtomaster_Premium_${new Date().toISOString().slice(0,19).replace(/:/g, '-')}.xlsx`);
+        });
+        document.getElementById('priceSearch').addEventListener('input', filterPriceTable);
+        document.getElementById('clearPriceSearch').addEventListener('click', () => {
+            document.getElementById('priceSearch').value = '';
+            filterPriceTable();
+        });
+
+        // График
+        buildScheduleTable('');
+        const scheduleSearch = document.getElementById('scheduleSearch');
+        scheduleSearch.addEventListener('input', () => buildScheduleTable(scheduleSearch.value));
+        document.getElementById('clearScheduleSearch').addEventListener('click', () => {
+            scheduleSearch.value = '';
+            buildScheduleTable('');
+        });
+        document.getElementById('exportScheduleBtn').addEventListener('click', exportScheduleWithColor);
+        document.getElementById('importScheduleBtn').addEventListener('click', () => {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.xlsx, .xls';
+            input.onchange = (e) => { if (e.target.files.length) importScheduleFromExcel(e.target.files[0]); };
+            input.click();
+        });
+        document.getElementById('resetScheduleBtn').addEventListener('click', resetSchedule);
+        document.getElementById('printScheduleBtn').addEventListener('click', () => printWithOrientation('schedule'));
+
+        // Шиномонтаж
+        renderTireTable();
+        document.getElementById('exportTireBtn').addEventListener('click', exportTireToExcel);
+        document.getElementById('printTireBtn').addEventListener('click', () => printWithOrientation('tire'));
+        document.getElementById('importTireBtn').addEventListener('click', () => {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.xlsx, .xls';
+            input.onchange = (e) => { if (e.target.files.length) importTireFromExcel(e.target.files[0]); };
+            input.click();
+        });
+
+        // Мойка
+        renderWashTable();
+        document.getElementById('exportWashBtn').addEventListener('click', exportWashToExcel);
+        document.getElementById('printWashBtn').addEventListener('click', () => printWithOrientation('wash'));
+
+        // Переключение вкладок
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const tab = btn.getAttribute('data-tab');
+                document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+                document.getElementById(tab + 'Tab').classList.add('active');
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                if (tab === 'schedule') buildScheduleTable(document.getElementById('scheduleSearch').value);
+            });
+        });
+    });
+</script>
+</body>
+</html>
